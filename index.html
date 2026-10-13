@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เชฟน้อยเข้าครัว - ฝึกทักษะ Decomposition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Kanit -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        kanit: ['Kanit', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            min-height: 100vh;
+        }
+        .drag-card {
+            cursor: grab;
+            transition: all 0.2s ease;
+        }
+        .drag-card:active {
+            cursor: grabbing;
+        }
+        .drop-zone {
+            min-height: 120px;
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col min-h-screen">
+
+    <header class="bg-amber-500 shadow-md py-4 px-6 text-white sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white p-2 rounded-full text-amber-600 shadow-inner">
+                    <i class="fa-solid fa-utensils text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-wide">เชฟน้อยเข้าครัว 🍕</h1>
+                    <p class="text-xs md:text-sm text-amber-100">ฝึกทักษะ Decomposition (การแตกปัญหาย่อย)</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="bg-amber-600 px-4 py-1.5 rounded-full text-sm font-medium shadow-inner flex items-center space-x-2">
+                    <i class="fa-solid fa-star text-yellow-300"></i>
+                    <span id="score-display">คะแนน: 0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-4xl w-full mx-auto p-4 md:p-6 flex flex-col justify-center">
+
+        <!-- Welcome / Intro Screen -->
+        <div id="intro-screen" class="bg-white rounded-3xl shadow-xl p-6 md:p-10 text-center border-4 border-amber-200">
+            <div class="w-32 h-32 mx-auto mb-6 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 shadow-inner">
+                <i class="fa-solid fa-pizza-slice text-6xl animate-bounce"></i>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-bold text-amber-700 mb-3">ยินดีต้อนรับสู่ครัวพิซซ่าแสนอร่อย!</h2>
+            <p class="text-slate-600 max-w-lg mx-auto mb-6 text-sm md:text-base">
+                การทำพิซซ่า 1 ถาดใหญ่ เป็นปัญหาใหญ่ที่เราสามารถแบ่งย่อยออกเป็นขั้นตอนเล็กๆ ได้ (Decomposition) มาช่วยเชฟน้อยเรียงลำดับขั้นตอนการทำพิซซ่าให้ถูกต้องกันเถอะ!
+            </p>
+            
+            <div class="bg-amber-50 rounded-2xl p-4 max-w-md mx-auto mb-8 text-left border border-amber-200">
+                <h3 class="font-bold text-amber-800 mb-2 flex items-center">
+                    <i class="fa-solid fa-bullseye text-amber-600 mr-2"></i> เป้าหมายภารกิจ:
+                </h3>
+                <p class="text-sm text-slate-700">ดูภาพเป้าหมาย (พิซซ่าอบเสร็จ) แล้วลากวางเรียงลำดับขั้นตอนย่อยที่ 1 ถึง 3 ให้ถูกต้องตามลำดับเวลาในการทำอาหาร</p>
+            </div>
+
+            <button onclick="startGame()" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all text-lg flex items-center justify-center mx-auto space-x-2">
+                <span>เริ่มทำภารกิจ</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- Game Screen (Hidden initially) -->
+        <div id="game-screen" class="hidden space-y-6">
+            
+            <!-- Target Goal Card -->
+            <div class="bg-white rounded-2xl shadow-md p-4 md:p-6 border-2 border-amber-300 flex flex-col md:flex-row items-center gap-6">
+                <div class="w-full md:w-1/3 flex justify-center">
+                    <div class="relative w-40 h-40 rounded-2xl overflow-hidden shadow-md border-4 border-amber-400 bg-amber-100 flex items-center justify-center text-center p-2">
+                        <!-- Target Image Representation -->
+                        <div class="absolute inset-0 bg-cover bg-center opacity-90" style="background-image: url('https://placehold.co/300x300/f59e0b/ffffff?text=Target+Pizza');"></div>
+                        <div class="relative z-10 bg-black/40 text-white p-2 rounded-xl text-xs font-semibold backdrop-blur-sm">
+                            <i class="fa-solid fa-flag-checkered text-amber-300 mr-1"></i> ภาพเป้าหมาย:<br>พิซซ่าอบเสร็จสมบูรณ์
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full md:w-2/3 text-center md:text-left">
+                    <span class="bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">ภารกิจที่ 1: การแตกปัญหาย่อย (Decomposition)</span>
+                    <h3 class="text-xl font-bold text-slate-800 mt-2">จงเรียงลำดับขั้นตอนการทำพิซซ่าให้ถูกต้อง</h3>
+                    <p class="text-slate-600 text-sm mt-1">ลากขั้นตอนย่อยทั้ง 3 ด้านล่างนี้ มาวางลงในช่องว่างลำดับที่ 1, 2 และ 3 ให้ถูกต้องตามขั้นตอนการทำจริง</p>
+                </div>
+            </div>
+
+            <!-- Drag and Drop Workspace -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="drop-zones-container">
+                <!-- Drop Zone 1 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border-2 border-dashed border-amber-300 drop-zone flex flex-col items-center justify-center" data-index="0" ondragover="allowDrop(event)" ondragleave="removeDragOver(event)" ondrop="dropItem(event)">
+                    <span class="text-xs font-bold text-amber-600 mb-2 uppercase tracking-wide bg-amber-50 px-2 py-0.5 rounded">ลำดับที่ 1 (เริ่มต้น)</span>
+                    <div class="text-slate-400 text-sm italic placeholder-text">ลากการ์ดขั้นตอนมาวางที่นี่</div>
+                </div>
+                <!-- Drop Zone 2 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border-2 border-dashed border-amber-300 drop-zone flex flex-col items-center justify-center" data-index="1" ondragover="allowDrop(event)" ondragleave="removeDragOver(event)" ondrop="dropItem(event)">
+                    <span class="text-xs font-bold text-amber-600 mb-2 uppercase tracking-wide bg-amber-50 px-2 py-0.5 rounded">ลำดับที่ 2 (กลางกระบวนการ)</span>
+                    <div class="text-slate-400 text-sm italic placeholder-text">ลากการ์ดขั้นตอนมาวางที่นี่</div>
+                </div>
+                <!-- Drop Zone 3 -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border-2 border-dashed border-amber-300 drop-zone flex flex-col items-center justify-center" data-index="2" ondragover="allowDrop(event)" ondragleave="removeDragOver(event)" ondrop="dropItem(event)">
+                    <span class="text-xs font-bold text-amber-600 mb-2 uppercase tracking-wide bg-amber-50 px-2 py-0.5 rounded">ลำดับที่ 3 (ก่อนอบ)</span>
+                    <div class="text-slate-400 text-sm italic placeholder-text">ลากการ์ดขั้นตอนมาวางที่นี่</div>
+                </div>
+            </div>
+
+            <!-- Source Cards Bank -->
+            <div class="bg-amber-50 rounded-2xl p-5 border border-amber-200">
+                <h4 class="text-sm font-bold text-amber-800 mb-3 flex items-center">
+                    <i class="fa-solid fa-layer-group text-amber-600 mr-2"></i> การ์ดขั้นตอนย่อย (เลือกสลับสับเปลี่ยนได้):
+                </h4>
+                <div id="cards-bank" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- Cards will be populated dynamically and randomized -->
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-center space-x-4 pt-2">
+                <button onclick="checkAnswer()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-full shadow-md transition-all flex items-center space-x-2">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <span>ตรวจคำตอบ</span>
+                </button>
+                <button onclick="resetGame()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 px-6 rounded-full shadow-sm transition-all flex items-center space-x-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>เริ่มใหม่</span>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Success Modal / Screen -->
+        <div id="success-screen" class="hidden bg-white rounded-3xl shadow-xl p-8 text-center border-4 border-emerald-300 max-w-lg mx-auto my-auto">
+            <div class="w-24 h-24 mx-auto mb-4 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 shadow-inner">
+                <i class="fa-solid fa-trophy text-5xl animate-bounce"></i>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-bold text-emerald-700 mb-2">ยอดเยี่ยมมาก! เชฟน้อยเก่งสุดๆ</h2>
+            <p class="text-slate-600 mb-6 text-sm md:text-base">
+                น้องๆ ได้เรียนรู้ทักษะ <strong>Decomposition (การแตกปัญหาย่อย)</strong> โดยการแบ่งปัญหาใหญ่ (ทำพิซซ่า) ออกเป็นขั้นตอนย่อยได้อย่างถูกต้องแม่นยำ!
+            </p>
+            <div class="bg-emerald-50 p-4 rounded-2xl mb-6 border border-emerald-200 text-left text-xs md:text-sm text-slate-700 space-y-2">
+                <div class="font-bold text-emerald-800 mb-1">สรุปขั้นตอนย่อยที่ถูกต้อง:</div>
+                <div>1. ทาซอสมะเขือเทศบนแป้งกลม</div>
+                <div>2. โรยชีสและพริกหยวกแต่งหน้า</div>
+                <div>3. นำเข้าเตาอบจนสุกหอม</div>
+            </div>
+            <button onclick="restartGame()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all flex items-center justify-center mx-auto space-x-2">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>เล่นอีกครั้ง</span>
+            </button>
+        </div>
+
+        <!-- Message Box Modal -->
+        <div id="message-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl border-2 border-amber-300 animate-scale">
+                <div id="modal-icon" class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-3xl"></div>
+                <h3 id="modal-title" class="text-lg font-bold mb-2"></h3>
+                <p id="modal-desc" class="text-sm text-slate-600 mb-6"></p>
+                <button onclick="closeModal()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-full shadow-md transition-all">
+                    ตกลง
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="text-center py-4 text-xs text-slate-500">
+        สื่อการเรียนรู้ Coding & Computational Thinking สำหรับเด็ก • เชฟน้อยเข้าครัว
+    </footer>
+
+    <script>
+        // Data definition for pizza steps based on user prompt
+        const pizzaSteps = [
+            {
+                id: "step1",
+                correctIndex: 0,
+                title: "ด่านที่ 1: ทาซอสบนแป้ง",
+                desc: "แป้งพิซซ่ากลมๆ มีซอสมะเขือเทศทาอยู่บนโต๊ะทำครัว",
+                imageText: "Step 1: แป้งทาซอส"
+            },
+            {
+                id: "step2",
+                correctIndex: 1,
+                title: "ด่านที่ 2: โรยหน้าเครื่อง",
+                desc: "แป้งพิซซ่าที่ทาซอสแล้ว กำลังมีมือเด็กโรยชีสกับพริกหยวก",
+                imageText: "Step 2: โรยชีสพริกหยวก"
+            },
+            {
+                id: "step3",
+                correctIndex: 2,
+                title: "ด่านที่ 3: นำเข้าเตาอบ",
+                desc: "พิซซ่าแต่งหน้าเสร็จ กำลังจะถูกนำเข้าเตาอบแสงสีส้ม",
+                imageText: "Step 3: เข้าเตาอบ"
+            }
+        ];
+
+        let score = 0;
+        let draggedCardId = null;
+
+        function startGame() {
+            document.getElementById('intro-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            initGameCards();
+        }
+
+        function initGameCards() {
+            const bank = document.getElementById('cards-bank');
+            bank.innerHTML = '';
+            
+            // Clear drop zones
+            const dropZones = document.querySelectorAll('.drop-zone');
+            dropZones.forEach(zone => {
+                zone.innerHTML = `<span class="text-xs font-bold text-amber-600 mb-2 uppercase tracking-wide bg-amber-50 px-2 py-0.5 rounded">ลำดับที่ ${parseInt(zone.dataset.index)+1}</span><div class="text-slate-400 text-sm italic placeholder-text">ลากการ์ดขั้นตอนมาวางที่นี่</div>`;
+                zone.classList.remove('border-emerald-500', 'bg-emerald-50');
+            });
+
+            // Shuffle steps
+            let shuffled = [...pizzaSteps].sort(() => Math.random() - 0.5);
+
+            shuffled.forEach(step => {
+                const card = document.createElement('div');
+                card.id = step.id;
+                card.draggable = true;
+                card.className = "drag-card bg-white rounded-xl p-4 shadow-sm border-2 border-amber-200 flex flex-col items-center text-center hover:shadow-md hover:border-amber-400 transition-all";
+                card.ondragstart = (e) => {
+                    draggedCardId = step.id;
+                    e.dataTransfer.setData('text/plain', step.id);
+                };
+                
+                card.innerHTML = `
+                    <div class="w-full h-24 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-xs mb-2 relative overflow-hidden shadow-inner">
+                        <div class="absolute inset-0 bg-cover bg-center opacity-80" style="background-image: url('https://placehold.co/200x150/fbbf24/ffffff?text=${encodeURIComponent(step.imageText)}')"></div>
+                        <span class="relative z-10 bg-black/40 px-2 py-1 rounded text-white text-[11px]">${step.title}</span>
+                    </div>
+                    <p class="text-xs text-slate-600 line-clamp-2">${step.desc}</p>
+                `;
+                bank.appendChild(card);
+            });
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+            ev.currentTarget.classList.add('bg-amber-50', 'border-amber-500');
+        }
+
+        function removeDragOver(ev) {
+            ev.currentTarget.classList.remove('bg-amber-50', 'border-amber-500');
+        }
+
+        function dropItem(ev) {
+            ev.preventDefault();
+            const zone = ev.currentTarget;
+            zone.classList.remove('bg-amber-50', 'border-amber-500');
+            
+            if (!draggedCardId) return;
+            const cardElement = document.getElementById(draggedCardId);
+            if (!cardElement) return;
+
+            // If drop zone already has a card, return it to bank or swap
+            const existingCard = zone.querySelector('.drag-card');
+            const bank = document.getElementById('cards-bank');
+            if (existingCard) {
+                bank.appendChild(existingCard);
+            }
+
+            // Remove placeholder text if present
+            const placeholder = zone.querySelector('.placeholder-text');
+            if (placeholder) placeholder.remove();
+
+            zone.appendChild(cardElement);
+            draggedCardId = null;
+        }
+
+        function checkAnswer() {
+            const dropZones = document.querySelectorAll('.drop-zone');
+            let allPlaced = true;
+            let userOrder = [];
+
+            dropZones.forEach(zone => {
+                const card = zone.querySelector('.drag-card');
+                if (!card) {
+                    allPlaced = false;
+                } else {
+                    userOrder.push({
+                        zoneIndex: parseInt(zone.dataset.index),
+                        cardId: card.id
+                    });
+                }
+            });
+
+            if (!allPlaced) {
+                showModal("ยังวางไม่ครบนะจ๊ะ!", "กรุณาลากการ์ดขั้นตอนย่อยให้ครบทุกช่องก่อนตรวจคำตอบค่ะ", "warning");
+                return;
+            }
+
+            // Check correctness
+            let isCorrect = true;
+            userOrder.forEach(item => {
+                const stepObj = pizzaSteps.find(s => s.id === item.cardId);
+                if (stepObj.correctIndex !== item.zoneIndex) {
+                    isCorrect = false;
+                }
+            });
+
+            if (isCorrect) {
+                score += 100;
+                document.getElementById('score-display').innerText = `คะแนน: ${score}`;
+                document.getElementById('game-screen').classList.add('hidden');
+                document.getElementById('success-screen').classList.remove('hidden');
+            } else {
+                showModal("เกือบถูกแล้ว ลองใหม่อน้า!", "ลำดับขั้นตอนยังไม่ถูกต้อง ลองสังเกตภาพเป้าหมายแล้วเรียงใหม่ตั้งแต่ขั้นตอนที่ 1 ถึง 3 นะคะ", "error");
+            }
+        }
+
+        function resetGame() {
+            initGameCards();
+        }
+
+        function restartGame() {
+            document.getElementById('success-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            initGameCards();
+        }
+
+        function showModal(title, desc, type) {
+            const modal = document.getElementById('message-modal');
+            const iconDiv = document.getElementById('modal-icon');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-desc').innerText = desc;
+
+            if (type === "warning") {
+                iconDiv.className = "w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-3xl bg-amber-100 text-amber-600";
+                iconDiv.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else {
+                iconDiv.className = "w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-3xl bg-rose-100 text-rose-600";
+                iconDiv.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('message-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
